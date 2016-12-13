@@ -1,0 +1,19 @@
+html, body, #root
+  width: 100%
+  height: 100%
+  overflow: hidden
+  margin: 0
+
+#root
+  display: flex
+  flex-direction: column
+
+.main-controls
+  flex: 1
+  position: relative
+  @import './controls.styl'
+
+.movement-controls
+  flex: 2
+  position: relative
+  @import './slider.styl'

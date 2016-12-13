@@ -1,0 +1,28 @@
+{
+  "name": "snake_max7219",
+  "version": "1.0.0",
+  "description": "snake game for usage with max7219 led matrix ",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "npm run style && npm run serve",
+    "serve": "node --harmony ./app.js",
+    "style": "stylus ./public/stylus/main.styl -o ./public/main.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "snake",
+    "max7219",
+    "matrix",
+    "raspberry",
+    "pi"
+  ],
+  "author": "Alexander Yanovych",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "johnny-five": "^0.10.6",
+    "raspi-io": "^7.1.0",
+    "ws": "^1.1.1"
+  }
+}
