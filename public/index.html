@@ -10,11 +10,17 @@
   <body>
     <div id="root">
       <div class="main-controls">
+        <div class="status-bar">
+          <div class="score-control">
+            <span class="score-caption">Score</span>
+            <span class="score-value">0</span>
+          </div>
+        </div>
         <div class="controls">
-          <button class="start-control">Start</button>
+          <button class="start-control" data-start="true">Start</button>
         </div>
       </div>
-      <div class="movement-controls">
+      <div class="movement-controls disabled">
         <div class="slider-control">
           <div class="slider-path">
             <div class="slider"></div>

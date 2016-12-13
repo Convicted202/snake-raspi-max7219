@@ -6,13 +6,29 @@ body,
   overflow: hidden;
   margin: 0;
 }
+body {
+  background: #f7f7f7;
+}
 #root {
   display: flex;
   flex-direction: column;
+  margin: 0 auto;
+  max-width: 600px;
+}
+@media all and (max-width: 800px) {
+  #root {
+    max-width: 100%;
+  }
+}
+@media all and (max-height: 500px) and (orientation: landscape) {
+  #root {
+    flex-direction: row;
+  }
 }
 .main-controls {
-  flex: 1;
+  flex: 1.25;
   position: relative;
+  background: #f7f7f7;
 }
 .main-controls .controls {
   position: absolute;
@@ -35,14 +51,33 @@ body,
   text-transform: uppercase;
   cursor: pointer;
   outline: none;
-  transition: opacity 0.3s;
+  transition: opacity 0.2s;
 }
 .main-controls .controls .start-control:hover {
   opacity: 0.9;
 }
+.main-controls .controls .start-control:active {
+  background: #a53c32;
+  opacity: 1;
+}
+.main-controls .status-bar {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  font-family: arial;
+  background: #f3f3f3;
+  box-shadow: 0px 0px 4px #737373;
+}
+.main-controls .status-bar .score-control {
+  display: inline-block;
+  padding-left: 15px;
+  text-align: left;
+}
 .movement-controls {
-  flex: 2;
+  flex: 1.75;
   position: relative;
+  background: #f3f3f3;
+  box-shadow: 0px 0px 2px #bababa;
 }
 .movement-controls .slider-control {
   top: 50%;
@@ -53,9 +88,9 @@ body,
   position: absolute;
   background-color: #597bb6;
   border-radius: 50%;
-  width: 250px;
+  width: 230px;
   height: 0;
-  padding-bottom: 250px;
+  padding-bottom: 230px;
   transform: translate3d(-50%, -50%, 0);
   box-shadow: 0 0 10px rgba(0,0,0,0.5) inset;
   z-index: 1;
@@ -63,8 +98,8 @@ body,
 .movement-controls .slider-control .slider-path:before {
   content: "";
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 90px;
+  height: 90px;
   background-color: #ecf0f1;
   border-radius: 50%;
   top: 30%;
@@ -96,10 +131,13 @@ body,
   border: 15px solid transparent;
   position: absolute;
   border-radius: 50%;
-  width: 300px;
+  width: 270px;
   height: 0;
-  padding-bottom: 300px;
+  padding-bottom: 270px;
   transform: translate3d(-50%, -50%, 0);
   transition: border 0.2s;
   z-index: 0;
+}
+.movement-controls.disabled {
+  opacity: 0.5;
 }

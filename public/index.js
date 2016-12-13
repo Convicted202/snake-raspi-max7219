@@ -1,5 +1,6 @@
 const wsLocation = location.href.replace(location.protocol, 'ws:'),
       ws = new WebSocket(wsLocation),
+      connection = { open: false, error: false },
       color = '#597bb6';
 
 const directions = {
@@ -16,35 +17,39 @@ const sides = {
   'left'  : 'Left'
 };
 
+const btnState = {
+  'true': 'Stop',
+  'false': 'Start'
+};
+
 let isDragging = false,
+    isDragAllowed = false,
     dir = 'up';
 
-const startDrag = e => isDragging = true;
+const startDrag = e => isDragAllowed && (isDragging = true);
 
 const endDrag = e => isDragging = false;
 
-const processDrag = (circle, drag, shadow) => e => {
-  let center_x, center_y,
-      pos_x, pos_y, delta_y, delta_x,
-      touch, angle, boundRect, direction;
+const processDrag = (circle, drag, shadow, e) => {
+  let pos, delta,
+      angle, direction,
+      boundRect = circle.getBoundingClientRect();
 
   if (!isDragging) return;
-  if (e.touches) touch = e.touches[0];
-
   e.preventDefault();
 
-  boundRect = circle.getBoundingClientRect();
+  pos = {
+    x: (e.touches[0] || e).pageX,
+    y: (e.touches[0] || e).pageY
+  }
 
-  center_x = (circle.clientWidth / 2) + boundRect.left;
-  center_y = (circle.clientHeight / 2) + boundRect.top;
-  pos_x = e.pageX || touch.pageX;
-  pos_y = e.pageY || touch.pageY;
-  delta_y = center_y - pos_y;
-  delta_x = center_x - pos_x;
-  angle = Math.atan2(delta_y, delta_x) * (180 / Math.PI);
-  angle -= 90;
+  delta = {
+    x: circle.clientWidth / 2 + boundRect.left - pos.x,
+    y: circle.clientHeight / 2 + boundRect.top - pos.y
+  };
+
+  angle = Math.round(Math.atan2(delta.y, delta.x) * (180 / Math.PI) - 90);
   if (angle < 0) angle += 360;
-  angle = Math.round(angle);
   drag.style.transform = `rotate(${angle}deg)`;
 
   direction = getDirectionFromAngle(angle);
@@ -52,7 +57,7 @@ const processDrag = (circle, drag, shadow) => e => {
   shadow.style.borderColor = 'transparent';
   shadow.style[`border${sides[direction]}Color`] = color;
 
-  sendDirection(direction);
+  processDirection(direction);
 }
 
 const getDirectionFromAngle = angle =>
@@ -63,20 +68,82 @@ const getDirectionFromAngle = angle =>
       )
     )[0]
 
-const sendDirection = direction => {
-  if (dir === direction) return;
-  dir = direction;
-  ws.send(JSON.stringify({direction: dir}));
+const wsSend = data => {
+  if (connection.open && !connection.error)
+    ws.send(JSON.stringify(data));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  let drag = document.querySelector('.slider'),
-      circle = document.querySelector('.slider-path'),
-      shadow = document.querySelector('.shadow');
+const processDirection = direction => {
+  if (dir === direction) return;
+  dir = direction;
 
-  const doDrag = processDrag(circle, drag, shadow);
+  wsSend({direction: dir});
+}
+
+const processStart = (isStarted, cb) => {
+  const start = isStarted();
+
+  isDragAllowed = start;
+  wsSend({start});
+  cb && cb();
+}
+
+ws.onopen = () => {
+  connection.open = true;
+  connection.error = false;
+}
+
+ws.onclose = () => {
+  connection.open = false;
+  console.warn('Connection is in CLOSED state, your actions will not emit events');
+}
+
+ws.onerror = () => {
+  connection.error = true;
+  console.warn('An error occurred with WebSocket connection');
+}
+
+const processWSMessage = scoreElement =>
+  ws.onmessage = event => {
+    msgObj = JSON.parse(event.data);
+    if (msgObj.score) scoreElement.textContent = msgObj.score;
+  }
+
+document.addEventListener('DOMContentLoaded', () => {
+  let drag      = document.querySelector('.slider'),
+      circle    = document.querySelector('.slider-path'),
+      shadow    = document.querySelector('.shadow'),
+      startBtn  = document.querySelector('.start-control'),
+      score     = document.querySelector('.score-value'),
+      controls  = document.querySelector('.movement-controls'),
+      btnObserver = null, configs = { attributes: true };
+
+  const doDrag = processDrag.bind(null, circle, drag, shadow);
 
   shadow.style.borderTopColor = color;
+
+  processWSMessage(score);
+
+  btnObserver = new MutationObserver(mutations =>
+    mutations.forEach(mutation => {
+      const attr = mutation.target.getAttribute(mutation.attributeName);
+
+      controls.classList.toggle('disabled', /^true$/.test(attr));
+
+    })
+  );
+
+  btnObserver.observe(startBtn, configs);
+
+  startBtn.addEventListener('click', processStart.bind(
+    null,
+    () => /^true$/.test(startBtn.dataset.start),
+    () => {
+      let startAttr = startBtn.dataset.start;
+      startBtn.textContent = btnState[startAttr];
+      startBtn.dataset.start = /^false$/.test(startAttr);
+    }
+  ));
 
   circle.addEventListener('mousedown', startDrag);
   circle.addEventListener('touchstart', startDrag);
